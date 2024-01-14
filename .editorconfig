@@ -1,0 +1,28 @@
+root = true
+
+# common configurations
+[*]
+charset = utf-8
+end_of_line = lf
+
+indent_size = 2
+indent_style = space
+
+trim_trailing_whitespace = true
+insert_final_newline = false
+
+# configuration for go file
+[*.go]
+indent_style = tab
+
+# configuration for markdown file
+[*.md]
+trim_trailing_whitespace = false
+
+# configuration for Makefile
+[{Makefile,makefile}]
+indent_style = tab
+
+# configuration for linux shell script
+[{*.sh,*.bash,*.zsh}]
+indent_style = space
