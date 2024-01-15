@@ -1,0 +1,10 @@
+*          text=auto eol=lf
+
+*.gitattributes text
+.gitignore text
+*.go       text diff=golang
+*.md       text diff=markdown
+
+*.gitattributes linguist-language=gitattributes
+*.gitattributes linguist-detectable=true
+*.gitattributes linguist-documentation=false
