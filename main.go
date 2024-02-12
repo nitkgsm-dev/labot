@@ -13,11 +13,9 @@ import (
 	"os"
 )
 
-var (
-	token = os.Getenv("discord_token")
-)
-
 func main() {
+	token := os.Getenv("discord_token")
+
 	l, err := readline.NewEx(&readline.Config{
 		Prompt:          "> ",
 		HistoryFile:     ".labot/.console_history",
