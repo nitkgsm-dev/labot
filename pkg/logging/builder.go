@@ -59,32 +59,32 @@ func DefaultBuilder() *Builder {
 	}
 }
 
-func (b Builder) SetLevel(level LogLevel) *Builder {
+func (b *Builder) SetLevel(level LogLevel) *Builder {
 	b.level = level
-	return &b
+	return b
 }
 
-func (b Builder) SetDateFormat(format string) *Builder {
+func (b *Builder) SetDateFormat(format string) *Builder {
 	b.dateFormat = format
-	return &b
+	return b
 }
 
-func (b Builder) SetLogFormat(format logFormat) *Builder {
+func (b *Builder) SetLogFormat(format logFormat) *Builder {
 	b.logFormat = format
-	return &b
+	return b
 }
 
-func (b Builder) SetDisplaySource(display bool) *Builder {
+func (b *Builder) SetDisplaySource(display bool) *Builder {
 	b.displaySource = display
-	return &b
+	return b
 }
 
-func (b Builder) SetWriter(writer io.Writer) *Builder {
+func (b *Builder) SetWriter(writer io.Writer) *Builder {
 	b.writer = writer
-	return &b
+	return b
 }
 
-func (b Builder) Build() *slog.Logger {
+func (b *Builder) Build() *slog.Logger {
 	var handler slog.Handler
 
 	if b.logFormat == FormatJSON {
