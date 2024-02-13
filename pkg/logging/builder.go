@@ -104,13 +104,14 @@ func (b *Builder) Build() *slog.Logger {
 				},
 			},
 		)
+	} else {
+		handler = clog.New(
+			clog.WithLevel(b.level.ToSlogLevel()),
+			clog.WithSource(b.displaySource),
+			clog.WithWriter(b.writer),
+			clog.WithTimeFmt(b.dateFormat),
+			clog.WithPrinter(clog.IndentPrinter),
+		)
 	}
-	handler = clog.New(
-		clog.WithLevel(b.level.ToSlogLevel()),
-		clog.WithSource(b.displaySource),
-		clog.WithWriter(b.writer),
-		clog.WithTimeFmt(b.dateFormat),
-		clog.WithPrinter(clog.IndentPrinter),
-	)
 	return slog.New(handler)
 }
