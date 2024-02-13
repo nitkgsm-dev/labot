@@ -78,10 +78,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		if _, err := messenger.Send(
-			discord.NewMessageBuilder().SetContent("pong"),
-			e.Client(),
-		); err != nil {
+		if _, err := messenger.Send(discord.NewMessageBuilder().SetContent("pong")); err != nil {
 			return err
 		}
 		return e.CreateMessage(discord.NewMessageBuilder().SetContent("pong").BuildCreate())
