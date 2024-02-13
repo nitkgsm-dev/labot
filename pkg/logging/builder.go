@@ -36,7 +36,7 @@ func (l LogLevel) ToSlogLevel() slog.Level {
 type logFormat int
 
 const (
-	FormatText logFormat = 0
+	FormatText logFormat = iota
 	FormatJSON
 )
 
