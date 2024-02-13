@@ -19,23 +19,19 @@ import (
 )
 
 var (
-	jsonLog    bool
-	token      string
-	debug      bool
-	dateFormat string
+	jsonLog    = flag.Bool("json-log", false, "enable json log format")
+	token      = flag.String("token", "", "discord bot token")
+	debug      = flag.Bool("debug", false, "enable debug mode")
+	dateFormat = flag.String("date-format", time.TimeOnly, "date format")
 )
 
 func init() {
-	flag.BoolVar(&jsonLog, "json-log", false, "enable json log format")
-	flag.StringVar(&token, "token", "", "discord bot token")
-	flag.StringVar(&dateFormat, "date-format", time.TimeOnly, "date format")
-	flag.BoolVar(&debug, "debug", false, "enable debug mode")
 	flag.Parse()
 }
 
 func main() {
-	if token == "" {
-		token = os.Getenv("DISCORD_TOKEN")
+	if *token == "" {
+		*token = os.Getenv("DISCORD_TOKEN")
 	}
 
 	l, err := readline.NewEx(&readline.Config{
@@ -52,20 +48,20 @@ func main() {
 	l.CaptureExitSignal()
 
 	logFormat := logging.FormatText
-	if jsonLog {
+	if *jsonLog {
 		logFormat = logging.FormatJSON
 	}
 
 	logLevel := logging.LevelInfo
-	if debug {
+	if *debug {
 		logLevel = logging.LevelDebug
 	}
 
 	logger := logging.DefaultBuilder().
 		SetWriter(l.Stdout()).
 		SetLogFormat(logFormat).
-		SetDisplaySource(debug).
-		SetDateFormat(dateFormat).
+		SetDisplaySource(*debug).
+		SetDateFormat(*dateFormat).
 		SetLevel(logLevel).
 		Build()
 	slog.SetDefault(logger)
@@ -91,7 +87,7 @@ func main() {
 
 	ready := make(chan *events.Ready)
 
-	client, err := disgo.New(token,
+	client, err := disgo.New(*token,
 		bot.WithGatewayConfigOpts(
 			gateway.WithIntents(
 				gateway.IntentsAll,
