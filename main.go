@@ -42,6 +42,7 @@ func main() {
 		EOFPrompt:       "exit",
 	})
 	if err != nil {
+		slog.Error("failed creating readline", slog.Any("err", err))
 		panic(err)
 	}
 	defer l.Close()
@@ -106,10 +107,12 @@ func main() {
 		bot.WithLogger(logger.WithGroup("disgo")),
 	)
 	if err != nil {
+		slog.Error("failed creating client", slog.Any("err", err))
 		panic(err)
 	}
 
 	if err := client.OpenGateway(context.Background()); err != nil {
+		slog.Error("failed opening gateway", slog.Any("err", err))
 		panic(err)
 	}
 	defer client.Close(context.Background())
@@ -123,6 +126,7 @@ func main() {
 	}
 
 	if err := handler.SyncCommands(client, commands, nil); err != nil {
+		slog.Error("failed syncing commands", slog.Any("err", err))
 		panic(err)
 	}
 
