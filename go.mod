@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/disgoorg/disgo v0.17.1
+	github.com/disgoorg/disgo v0.17.2
 	github.com/m-mizutani/clog v0.0.4
 )
 
