@@ -16,3 +16,7 @@ go.work
 
 # editor settings
 .vscode
+
+# console logs
+.console_history
+logs
