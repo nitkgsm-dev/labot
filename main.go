@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"github.com/chzyer/readline"
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/cache"
-	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/handler"
@@ -30,6 +30,12 @@ func init() {
 }
 
 func main() {
+	if err := realMain(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func realMain() error {
 	if *token == "" {
 		*token = os.Getenv("DISCORD_TOKEN")
 	}
@@ -43,7 +49,7 @@ func main() {
 	})
 	if err != nil {
 		slog.Error("failed creating readline", slog.Any("err", err))
-		panic(err)
+		return err
 	}
 	defer l.Close()
 	l.CaptureExitSignal()
@@ -70,16 +76,7 @@ func main() {
 	mux := handler.New()
 	mux.Use(middleware.Logger)
 
-	mux.Command("/ping", func(e *handler.CommandEvent) error {
-		messenger, err := e.Client().WebhookManager().GetMessenger(e.Channel())
-		if err != nil {
-			return err
-		}
-		if _, err := messenger.Send(discord.NewMessageBuilder().SetContent("pong")); err != nil {
-			return err
-		}
-		return e.CreateMessage(discord.NewMessageBuilder().SetContent("pong").BuildCreate())
-	})
+	registerCommands(mux)
 
 	mux.NotFound(func(e *events.InteractionCreate) error {
 		slog.Warn("not found", slog.Any("interaction", e.Interaction))
@@ -108,27 +105,29 @@ func main() {
 	)
 	if err != nil {
 		slog.Error("failed creating client", slog.Any("err", err))
-		panic(err)
+		return err
 	}
 
 	if err := client.OpenGateway(context.Background()); err != nil {
 		slog.Error("failed opening gateway", slog.Any("err", err))
-		panic(err)
+		return err
 	}
-	defer client.Close(context.Background())
 
 	select {
 	case <-ready:
 		slog.Info("ready")
 	case <-time.After(10 * time.Second):
 		slog.Error("ready event not received")
-		os.Exit(1)
+		return errors.New("ready event not received")
 	}
+
+	defer client.Close(context.Background())
 
 	if err := handler.SyncCommands(client, commands, nil); err != nil {
 		slog.Error("failed syncing commands", slog.Any("err", err))
-		panic(err)
+		return err
 	}
 
 	handleConsole(l, client)
+	return nil
 }
