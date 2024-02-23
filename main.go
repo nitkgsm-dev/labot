@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/chzyer/readline"
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
@@ -30,17 +31,15 @@ func init() {
 }
 
 func main() {
-	if err := realMain(); err != nil {
+	err := realMain()
+	if err != nil {
+		slog.Error("unexpected error", slog.Any("err", err))
 		os.Exit(1)
 	}
 }
 
 func realMain() error {
-	if *token == "" {
-		*token = os.Getenv("DISCORD_TOKEN")
-	}
-
-	l, err := readline.NewEx(&readline.Config{
+	cmd, err := readline.NewEx(&readline.Config{
 		Prompt:          "> ",
 		HistoryFile:     ".console_history",
 		AutoComplete:    completer,
@@ -48,11 +47,12 @@ func realMain() error {
 		EOFPrompt:       "exit",
 	})
 	if err != nil {
-		slog.Error("failed creating readline", slog.Any("err", err))
-		return err
+		slog.Error("failed to initiate cmd", slog.Any("err", err))
+		os.Exit(1)
 	}
-	defer l.Close()
-	l.CaptureExitSignal()
+
+	defer cmd.Close()
+	cmd.CaptureExitSignal()
 
 	logFormat := logging.FormatText
 	if *jsonLog {
@@ -65,13 +65,16 @@ func realMain() error {
 	}
 
 	logger := logging.DefaultBuilder().
-		SetWriter(l.Stdout()).
+		SetWriter(cmd.Stdout()).
 		SetLogFormat(logFormat).
 		SetDisplaySource(*debug).
 		SetDateFormat(*dateFormat).
 		SetLevel(logLevel).
 		Build()
 	slog.SetDefault(logger)
+	if *token == "" {
+		*token = os.Getenv("DISCORD_TOKEN")
+	}
 
 	mux := handler.New()
 	mux.Use(middleware.Logger)
@@ -104,30 +107,27 @@ func realMain() error {
 		bot.WithLogger(logger.WithGroup("disgo")),
 	)
 	if err != nil {
-		slog.Error("failed creating client", slog.Any("err", err))
-		return err
+		return fmt.Errorf("failed creating client: %w", err)
 	}
 
 	if err := client.OpenGateway(context.Background()); err != nil {
-		slog.Error("failed opening gateway", slog.Any("err", err))
-		return err
+		return fmt.Errorf("failed opening gateway: %w", err)
 	}
 
 	select {
 	case <-ready:
 		slog.Info("ready")
 	case <-time.After(10 * time.Second):
-		slog.Error("ready event not received")
 		return errors.New("ready event not received")
 	}
 
 	defer client.Close(context.Background())
 
 	if err := handler.SyncCommands(client, commands, nil); err != nil {
-		slog.Error("failed syncing commands", slog.Any("err", err))
-		return err
+		return fmt.Errorf("failed syncing commands: %w", err)
 	}
 
-	handleConsole(l, client)
+	handleConsole(cmd, client)
+
 	return nil
 }
