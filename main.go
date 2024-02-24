@@ -13,9 +13,12 @@ import (
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/handler/middleware"
+	"github.com/nitkgsm-dev/labot/pkg/console"
 	"github.com/nitkgsm-dev/labot/pkg/logging"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -31,23 +34,21 @@ func init() {
 }
 
 func main() {
-	err := realMain()
-	if err != nil {
-		slog.Error("unexpected error", slog.Any("err", err))
-		os.Exit(1)
-	}
-}
+	ctx, done := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer done()
 
-func realMain() error {
+	registerConsoleCommands()
+
 	cmd, err := readline.NewEx(&readline.Config{
 		Prompt:          "> ",
 		HistoryFile:     ".console_history",
-		AutoComplete:    completer,
+		AutoComplete:    console.Completer(),
 		InterruptPrompt: "^C",
 		EOFPrompt:       "exit",
 	})
 	if err != nil {
 		slog.Error("failed to initiate cmd", slog.Any("err", err))
+		done()
 		os.Exit(1)
 	}
 
@@ -72,6 +73,23 @@ func realMain() error {
 		SetLevel(logLevel).
 		Build()
 	slog.SetDefault(logger)
+	ctx = logging.WithLogger(ctx, logger)
+
+	clientChan := make(chan bot.Client)
+	go console.Listen(ctx, cmd, clientChan, done)
+
+	err = realMain(ctx, clientChan)
+	done()
+
+	if err != nil {
+		slog.Error("unexpected error", slog.Any("err", err))
+		os.Exit(1)
+	}
+}
+
+func realMain(ctx context.Context, clientChan chan<- bot.Client) error {
+	logger := logging.FromContext(ctx)
+
 	if *token == "" {
 		*token = os.Getenv("DISCORD_TOKEN")
 	}
@@ -110,7 +128,7 @@ func realMain() error {
 		return fmt.Errorf("failed creating client: %w", err)
 	}
 
-	if err := client.OpenGateway(context.Background()); err != nil {
+	if err := client.OpenGateway(ctx); err != nil {
 		return fmt.Errorf("failed opening gateway: %w", err)
 	}
 
@@ -121,13 +139,14 @@ func realMain() error {
 		return errors.New("ready event not received")
 	}
 
-	defer client.Close(context.Background())
+	defer client.Close(ctx)
+	clientChan <- client
 
 	if err := handler.SyncCommands(client, commands, nil); err != nil {
 		return fmt.Errorf("failed syncing commands: %w", err)
 	}
 
-	handleConsole(cmd, client)
+	<-ctx.Done()
 
 	return nil
 }
