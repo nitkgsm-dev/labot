@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/disgoorg/disgo v0.17.1
+	github.com/disgoorg/disgo v0.17.2
 	github.com/m-mizutani/clog v0.0.4
 )
 
@@ -25,4 +25,4 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 )
 
-replace github.com/disgoorg/disgo v0.17.1 => github.com/nitkgsm-dev/disgo v0.0.0-20240213053746-781cf79a7b66
+replace github.com/disgoorg/disgo => github.com/nitkgsm-dev/disgo v0.0.0-20240222053830-22a64e42082a
