@@ -25,4 +25,4 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 )
 
-replace github.com/disgoorg/disgo => github.com/nitkgsm-dev/disgo v0.0.0-20240222053830-22a64e42082a
+replace github.com/disgoorg/disgo => github.com/nitkgsm-dev/disgo v0.0.0-20240212211907-842ff0cd0282
