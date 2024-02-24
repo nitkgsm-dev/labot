@@ -62,7 +62,7 @@ type consoleHandler func(ctx CommandEvent) error
 
 func RegisterHandler(command string, handler consoleHandler) {
 	handlers[command] = handler
-	completer[command] = func(line string) []string {
+	completer[command] = func(_ string) []string {
 		return nil
 	}
 }
@@ -92,18 +92,20 @@ loop:
 	for {
 		line, err := l.Readline()
 		if err != nil {
-			if errors.Is(err, readline.ErrInterrupt) {
+			switch {
+			case errors.Is(err, readline.ErrInterrupt):
 				if len(line) == 0 {
 					slog.Info("exiting...")
 					return
 				} else {
 					continue loop
 				}
-			} else if errors.Is(err, io.EOF) {
+			case errors.Is(err, io.EOF):
 				return
+			default:
+				slog.Error("failed reading line", slog.Any("err", err))
+				continue loop
 			}
-			slog.Error("failed reading line", slog.Any("err", err))
-			continue loop
 		}
 		args := strings.Split(strings.TrimSpace(line), " ")
 		if len(args) == 0 {
